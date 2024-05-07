@@ -1,5 +1,8 @@
 import requests
 import matplotlib.pyplot as plt
+from flask import Flask, request, redirect, url_for, render_template
+
+app = Flask(__name__)
 
 def get_weather(api_key, city):
     url = f"http://api.openweathermap.org/data/2.5/weather?q={city}&appid={api_key}&units=metric"
@@ -25,14 +28,40 @@ def visualize_weather(weather_data, city):
                  horizontalalignment='center', verticalalignment='center', transform=plt.gca().transAxes)
         plt.axis('off')
         plt.show()
-    else:
-        print("No weather data to visualize.")
 
-def main():
-    api_key = "a6d5f2eaa08ad11b9daf96341ead5d82"  # API ключ OpenWeatherMap
-    city = input("Enter city name: ")  # Запитуємо користувача ввести назву міста
+@app.route('/', methods=['GET', 'POST'])
+def index():
+    if request.method == 'POST':
+        city = request.form.get('city')
+        return redirect(url_for('weather', city=city, login='is-23fiot-22-112'))  # Redirect with login parameter
+    return render_template('index.html')
+
+@app.route('/weather')
+def weather():
+    city = request.args.get('city')
+    login = request.args.get('login', '')
+
+    if not city:
+        return redirect(url_for('index'))
+
+    api_key = "a6d5f2eaa08ad11b9daf96341ead5d82"  # OpenWeatherMap API key
     weather_data = get_weather(api_key, city)
     visualize_weather(weather_data, city)
 
+    if login == 'is-23fiot-22-112':
+        student_info = "Шимків Мирослав Віталійович, 3 курс, група ІС-23"
+        return f'<h1>{student_info}</h1>'
+    else:
+        return "Invalid login."
+
+@app.route('/student-info', methods=['GET'])
+def display_student_info():
+    login = request.args.get('login', '')
+    if login == 'is-23fiot-22-112':
+        student_info = "Шимків Мирослав Віталійович, 3 курс, група ІС-23"
+        return f'<h1>{student_info}</h1>'
+    else:
+        return "Invalid login."
+
 if __name__ == "__main__":
-    main()
+    app.run(debug=True)
